@@ -1,5 +1,5 @@
 #pragma once
-#include "../model_instruments.hpp"
+#include "../../core/model_instruments.hpp"
 
 namespace wauvio {
 namespace instruments {
@@ -37,6 +37,7 @@ public:
         recipe.envelope = DAHDSR{0.0, 0.001, 0.0, 0.35, 0.0, 0.15};
     }
 };
+using SynthPluck = Pluck;
 
 class Bell : public SynthInstrument {
 public:

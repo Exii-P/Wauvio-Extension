@@ -1,5 +1,5 @@
 #pragma once
-#include "../model_instruments.hpp"
+#include "../../core/model_instruments.hpp"
 
 namespace wauvio {
 namespace instruments {
@@ -23,6 +23,16 @@ public:
 class BaritoneSaxophone : public SaxophoneInstrument {
 public:
     BaritoneSaxophone() : SaxophoneInstrument("Baritone Saxophone") { recipe.filter_cutoff = 2600.0; }
+};
+
+class BassSaxophone : public SaxophoneInstrument {
+public:
+    BassSaxophone() : SaxophoneInstrument("Bass Saxophone") { recipe.filter_cutoff = 1800.0; }
+};
+
+class ContrabassSaxophone : public SaxophoneInstrument {
+public:
+    ContrabassSaxophone() : SaxophoneInstrument("Contrabass Saxophone") { recipe.filter_cutoff = 1100.0; }
 };
 
 }

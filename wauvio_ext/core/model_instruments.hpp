@@ -1,8 +1,11 @@
 #pragma once
 
-#include "sampling.hpp"
+#include "../samples/sampling.hpp"
 #include <map>
+#include <unordered_map>
 #include <cmath>
+#include <memory>
+#include <utility>
 
 namespace wauvio {
 namespace audio {
@@ -37,6 +40,7 @@ struct TimbreRecipe {
     double pitch_attack_cents  = 0.0;
     double pitch_attack_time   = 0.035;
     double fixed_pitch_hz      = -1.0;
+    double pitch_instability   = 0.0;
 
     double formant1_hz = 0.0, formant1_gain_db = 0.0, formant1_q = 3.0;
     double formant2_hz = 0.0, formant2_gain_db = 0.0, formant2_q = 3.0;
@@ -73,6 +77,15 @@ inline StereoBuffer render_timbre(const TimbreRecipe& r, const Note& note, int s
     if (art == Articulation::Harmonic)  { pitch_shift_semi += 12.0; filter_scale *= 1.6; }
     if (art == Articulation::Hard)      { filter_scale *= 1.3; }
     if (art == Articulation::Soft)      { filter_scale *= 0.7; }
+    double art_extra_noise = 0.0;
+    bool art_click_only = false;
+    if (art == Articulation::Spiccato)  { percussive = true; decay_scale = std::min(decay_scale, 0.18); art_extra_noise += 0.1; }
+    if (art == Articulation::SulPonticello) { filter_scale *= 2.1; art_extra_noise += 0.08; }
+    if (art == Articulation::ColLegno)  { percussive = true; decay_scale = std::min(decay_scale, 0.08); art_extra_noise += 0.55; art_click_only = true; }
+    if (art == Articulation::ShortStab) { percussive = true; decay_scale = std::min(decay_scale, 0.15); }
+    if (art == Articulation::Whisper)   { art_extra_noise += 0.7; filter_scale *= 0.8; }
+    if (art == Articulation::Breath)    { art_extra_noise += 0.85; }
+    if (art == Articulation::Humming)   { filter_scale *= 0.6; }
 
     double base_freq = (r.fixed_pitch_hz >= 0.0)
         ? r.fixed_pitch_hz
@@ -85,6 +98,8 @@ inline StereoBuffer render_timbre(const TimbreRecipe& r, const Note& note, int s
     osc1.duty = 0.5; osc2.duty = 0.5;
 
     NoiseGenerator noise(static_cast<uint32_t>(note.midi_note * 7919u + 17u));
+    NoiseGenerator drift_noise(static_cast<uint32_t>(note.midi_note * 104729u + 3u));
+    double drift = 0.0;
 
     SVFilter filt(SVFilter::Mode::LowPass, std::max(80.0, r.filter_cutoff * filter_scale), r.filter_q);
 
@@ -108,11 +123,18 @@ inline StereoBuffer render_timbre(const TimbreRecipe& r, const Note& note, int s
             double lfo = std::sin(TWO_PI * r.vibrato_rate_hz * vt);
             pitch_mult *= std::pow(2.0, (lfo * r.vibrato_depth_cents) / 1200.0);
         }
+        if (r.pitch_instability > 0.0) {
+            double target = drift_noise.tick_pink();
+            drift += (target - drift) * 0.0004;
+            pitch_mult *= std::pow(2.0, (drift * r.pitch_instability) / 1200.0);
+        }
         osc1.frequency = base_freq * pitch_mult;
         osc2.frequency = base_freq * r.osc2_ratio * std::pow(2.0, r.detune_cents / 1200.0) * pitch_mult;
 
         float sample;
-        if (r.use_fm) {
+        if (art_click_only) {
+            sample = 0.0f;
+        } else if (r.use_fm) {
             float fm_val = static_cast<float>(std::sin(fm_cp + r.fm_index * std::sin(fm_mp)));
             fm_cp += fm_c_inc * pitch_mult; fm_mp += fm_m_inc * pitch_mult;
             if (fm_cp >= TWO_PI) fm_cp -= TWO_PI;
@@ -125,7 +147,7 @@ inline StereoBuffer render_timbre(const TimbreRecipe& r, const Note& note, int s
             sample = osc1v * static_cast<float>(1.0 - r.osc_mix) + osc2v * static_cast<float>(r.osc_mix);
         }
 
-        double n_amt = r.noise_mix + noise_boost;
+        double n_amt = r.noise_mix + noise_boost + art_extra_noise;
         if (r.noise_attack_burst > 0.0 && t < 0.02) n_amt += r.noise_attack_burst * (1.0 - t / 0.02);
         if (n_amt > 0.0) {
             float nz = r.pink_noise ? noise.tick_pink() : noise.tick_white();
@@ -206,7 +228,8 @@ class BowedStringInstrument : public ModeledInstrument {
 public:
     explicit BowedStringInstrument(std::string n) : ModeledInstrument(std::move(n)) {
         articulations = { Articulation::Sustain, Articulation::Pizzicato,
-                           Articulation::Staccato, Articulation::Tremolo, Articulation::Harmonic };
+                           Articulation::Staccato, Articulation::Tremolo, Articulation::Harmonic,
+                           Articulation::Spiccato, Articulation::SulPonticello, Articulation::ColLegno };
         recipe.osc1_shape = WaveShape::BL_Sawtooth;
         recipe.osc2_shape = WaveShape::BL_Sawtooth;
         recipe.osc2_ratio = 1.0; recipe.osc_mix = 0.4; recipe.detune_cents = 6.0;
@@ -259,7 +282,8 @@ class BrassInstrument : public ModeledInstrument {
 public:
     explicit BrassInstrument(std::string n) : ModeledInstrument(std::move(n)) {
         articulations = { Articulation::Sustain, Articulation::Staccato,
-                           Articulation::Fall, Articulation::Doit, Articulation::Muted, Articulation::Marcato };
+                           Articulation::Fall, Articulation::Doit, Articulation::Muted, Articulation::Marcato,
+                           Articulation::ShortStab };
         recipe.osc1_shape = WaveShape::BL_Square;
         recipe.osc2_shape = WaveShape::BL_Sawtooth;
         recipe.osc2_ratio = 1.0; recipe.osc_mix = 0.35; recipe.detune_cents = 5.0;
@@ -335,7 +359,8 @@ public:
 class VocalInstrument : public ModeledInstrument {
 public:
     explicit VocalInstrument(std::string n) : ModeledInstrument(std::move(n)) {
-        articulations = { Articulation::Sustain, Articulation::Legato };
+        articulations = { Articulation::Sustain, Articulation::Legato, Articulation::Whisper,
+                           Articulation::Breath, Articulation::Humming, Articulation::Staccato };
         recipe.osc1_shape = WaveShape::Sine;
         recipe.osc2_shape = WaveShape::Triangle;
         recipe.osc_mix = 0.25; recipe.detune_cents = 6.0;
@@ -360,6 +385,69 @@ public:
         recipe.filter_cutoff = 4000.0; recipe.filter_q = 1.0; recipe.filter_env_amount = 1500.0;
         recipe.stereo_width = 0.28;
     }
+};
+
+class GuitarInstrument : public PluckedStringInstrument {
+public:
+    explicit GuitarInstrument(std::string n) : PluckedStringInstrument(std::move(n)) {}
+};
+
+class ExperimentalInstrument : public ModeledInstrument {
+public:
+    explicit ExperimentalInstrument(std::string n) : ModeledInstrument(std::move(n)) {
+        articulations = { Articulation::Sustain, Articulation::Tremolo, Articulation::Whisper };
+        recipe.osc1_shape = WaveShape::Sine;
+        recipe.osc2_shape = WaveShape::Triangle;
+        recipe.osc_mix = 0.3;
+        recipe.noise_mix = 0.06;
+        recipe.envelope = DAHDSR{0.0, 0.3, 0.0, 0.3, 0.6, 0.8};
+        recipe.pitch_instability = 18.0;
+        recipe.vibrato_rate_hz = 4.0; recipe.vibrato_depth_cents = 10.0; recipe.vibrato_delay_sec = 0.1;
+        recipe.filter_cutoff = 3500.0; recipe.stereo_width = 0.35;
+    }
+};
+
+class DrumKit {
+public:
+    std::string name;
+
+    explicit DrumKit(std::string kit_name) : name(std::move(kit_name)) {}
+    virtual ~DrumKit() = default;
+
+    void map(int midi_note, std::shared_ptr<Instrument> instr) {
+        mapping_[midi_note] = std::move(instr);
+    }
+
+    bool has(int midi_note) const { return mapping_.find(midi_note) != mapping_.end(); }
+
+    PlayedNote play(int midi_note, Dynamics dyn = Dynamics::mf, double duration = 0.4,
+                     int sample_rate = 0) const
+    {
+        auto it = mapping_.find(midi_note);
+        if (it == mapping_.end() || !it->second)
+            return PlayedNote{ StereoBuffer(), sample_rate > 0 ? sample_rate : global_config().sample_rate };
+        return it->second->play(midi_note, duration, dyn, Articulation::Sustain, sample_rate);
+    }
+
+    StereoBuffer render_pattern(const std::vector<std::pair<double,int>>& hits,
+                                 double total_duration, Dynamics dyn = Dynamics::mf,
+                                 int sample_rate = 0) const
+    {
+        if (sample_rate <= 0) sample_rate = global_config().sample_rate;
+        StereoBuffer out = make_stereo(total_duration, sample_rate);
+        for (auto& h : hits) {
+            PlayedNote pn = play(h.second, dyn, 0.4, sample_rate);
+            const size_t off = static_cast<size_t>(h.first * sample_rate);
+            for (size_t i = 0; i < pn.audio.size() && off + i < out.size(); ++i) {
+                out.L[off + i] += pn.audio.L[i];
+                out.R[off + i] += pn.audio.R[i];
+            }
+        }
+        return out;
+    }
+
+protected:
+    std::unordered_map<int, std::shared_ptr<Instrument>> mapping_;
 };
 
 }

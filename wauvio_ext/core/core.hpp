@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../wauvio.hpp"
+#include "../../wauvio.hpp"
 
 #include <map>
 #include <memory>
@@ -56,7 +56,14 @@ enum class Articulation {
     Fall,
     Doit,
     FlutterTongue,
-    Rimshot
+    Rimshot,
+    Spiccato,
+    SulPonticello,
+    ColLegno,
+    ShortStab,
+    Whisper,
+    Breath,
+    Humming
 };
 
 inline const char* to_string(Articulation a) noexcept {
@@ -77,6 +84,13 @@ inline const char* to_string(Articulation a) noexcept {
         case Articulation::Doit:          return "Doit";
         case Articulation::FlutterTongue: return "FlutterTongue";
         case Articulation::Rimshot:       return "Rimshot";
+        case Articulation::Spiccato:      return "Spiccato";
+        case Articulation::SulPonticello: return "SulPonticello";
+        case Articulation::ColLegno:      return "ColLegno";
+        case Articulation::ShortStab:     return "ShortStab";
+        case Articulation::Whisper:       return "Whisper";
+        case Articulation::Breath:        return "Breath";
+        case Articulation::Humming:       return "Humming";
     }
     return "Sustain";
 }
