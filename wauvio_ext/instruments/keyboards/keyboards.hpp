@@ -214,5 +214,49 @@ public:
     }
 };
 
+class ChamberOrgan : public KeyboardInstrument {
+public:
+    ChamberOrgan() : KeyboardInstrument("Chamber Organ") {
+        recipe.osc1_shape = WaveShape::Sine; recipe.osc2_shape = WaveShape::Sine;
+        recipe.osc2_ratio = 2.0; recipe.osc_mix = 0.4;
+        recipe.envelope = DAHDSR{0.0, 0.04, 0.0, 0.02, 0.95, 0.2};
+        recipe.filter_cutoff = 4000.0; recipe.stereo_width = 0.25;
+    }
+};
+
+class Harmonium : public KeyboardInstrument {
+public:
+    Harmonium() : KeyboardInstrument("Harmonium") {
+        recipe.osc1_shape = WaveShape::BL_Sawtooth; recipe.osc_mix = 0.4; recipe.detune_cents = 10.0;
+        recipe.noise_mix = 0.04;
+        recipe.envelope = DAHDSR{0.0, 0.05, 0.0, 0.02, 0.9, 0.2}; recipe.filter_cutoff = 3000.0;
+    }
+};
+
+class ReedOrgan : public KeyboardInstrument {
+public:
+    ReedOrgan() : KeyboardInstrument("Reed Organ") {
+        recipe.osc1_shape = WaveShape::BL_Sawtooth; recipe.osc_mix = 0.42; recipe.detune_cents = 12.0;
+        recipe.noise_mix = 0.03;
+        recipe.envelope = DAHDSR{0.0, 0.04, 0.0, 0.02, 0.92, 0.18}; recipe.filter_cutoff = 3400.0;
+    }
+};
+
+class CPElectricPiano : public KeyboardInstrument {
+public:
+    CPElectricPiano() : KeyboardInstrument("CP Electric Piano") {
+        recipe.use_fm = true; recipe.fm_ratio = 1.0; recipe.fm_index = 1.4; recipe.osc_mix = 0.7;
+        recipe.filter_cutoff = 5000.0; recipe.envelope.decay = 1.4; recipe.stereo_width = 0.2;
+    }
+};
+
+class SoftPedalPiano : public KeyboardInstrument {
+public:
+    SoftPedalPiano() : KeyboardInstrument("Soft-Pedal Piano") {
+        recipe.filter_cutoff = 3400.0; recipe.osc_mix = 0.15; recipe.envelope.decay = 1.0;
+        recipe.gain = 0.6; recipe.noise_attack_burst = 0.03;
+    }
+};
+
 }
 }

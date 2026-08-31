@@ -263,6 +263,26 @@ public:
     }
 };
 
+class UilleannPipes : public WorldInstrument {
+public:
+    UilleannPipes() : WorldInstrument("Uilleann Pipes") {
+        recipe.osc1_shape = WaveShape::BL_Sawtooth; recipe.osc2_shape = WaveShape::BL_Square;
+        recipe.osc_mix = 0.4; recipe.detune_cents = 4.0; recipe.noise_mix = 0.06;
+        recipe.formant1_hz = 1300.0; recipe.formant1_gain_db = 4.0; recipe.filter_cutoff = 4800.0;
+        recipe.envelope = DAHDSR{0.0, 0.025, 0.0, 0.02, 0.93, 0.1}; recipe.vibrato_depth_cents = 10.0;
+    }
+};
+
+class HurdyGurdy : public WorldInstrument {
+public:
+    HurdyGurdy() : WorldInstrument("Hurdy-Gurdy") {
+        recipe.osc1_shape = WaveShape::BL_Sawtooth; recipe.osc2_shape = WaveShape::BL_Square;
+        recipe.osc_mix = 0.35; recipe.detune_cents = 10.0; recipe.noise_mix = 0.18;
+        recipe.pitch_instability = 12.0; recipe.filter_cutoff = 4200.0;
+        recipe.envelope = DAHDSR{0.0, 0.03, 0.0, 0.02, 0.9, 0.15};
+    }
+};
+
 class Concertina : public KeyboardInstrument {
 public:
     Concertina() : KeyboardInstrument("Concertina") {

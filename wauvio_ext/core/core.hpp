@@ -121,6 +121,11 @@ struct Note {
     Articulation articulation = Articulation::Sustain;
     double       pan         = 0.0;
 
+    double       expression          = 1.0;
+    double       pitch_bend_semitones = 0.0;
+    int          glide_from_midi     = -1;
+    double       glide_time          = 0.08;
+
     Note() = default;
     Note(int midi, double dur, Dynamics dyn = Dynamics::mf,
          Articulation art = Articulation::Sustain, double p = 0.0)

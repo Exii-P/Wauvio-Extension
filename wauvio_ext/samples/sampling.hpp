@@ -192,9 +192,11 @@ public:
         StereoBuffer out(n_out);
         if (n_out == 0 || zone.audio.empty()) return out;
 
-        const double pitch_ratio = midi_to_freq(note.midi_note) / midi_to_freq(zone.root_note);
+        const double bend_ratio  = std::pow(2.0, note.pitch_bend_semitones / 12.0);
+        const double pitch_ratio = (midi_to_freq(note.midi_note) / midi_to_freq(zone.root_note)) * bend_ratio;
         const double sr_ratio    = static_cast<double>(zone.sample_rate) / static_cast<double>(sample_rate);
         const double read_step   = pitch_ratio * sr_ratio;
+        const double expr_gain   = std::max(0.0, std::min(1.0, note.expression));
 
         const size_t start = std::min(zone.start, zone.audio.size());
         const size_t end   = std::min(zone.effective_end(), zone.audio.size());
@@ -213,8 +215,8 @@ public:
             size_t i1 = std::min(i0 + 1, zone.audio.size() - 1);
             float  frac = static_cast<float>(pos - static_cast<double>(i0));
 
-            out.L[i] = zone.audio.L[i0] * (1.0f - frac) + zone.audio.L[i1] * frac;
-            out.R[i] = zone.audio.R[i0] * (1.0f - frac) + zone.audio.R[i1] * frac;
+            out.L[i] = (zone.audio.L[i0] * (1.0f - frac) + zone.audio.L[i1] * frac) * static_cast<float>(expr_gain);
+            out.R[i] = (zone.audio.R[i0] * (1.0f - frac) + zone.audio.R[i1] * frac) * static_cast<float>(expr_gain);
 
             pos += read_step;
         }

@@ -94,6 +94,38 @@ public:
     }
 };
 
+class CelloDaSpalla : public BowedStringInstrument {
+public:
+    CelloDaSpalla() : BowedStringInstrument("Cello da Spalla") {
+        recipe.filter_cutoff = 3800.0; recipe.formant1_hz = 550.0; recipe.noise_mix = 0.045;
+        recipe.vibrato_depth_cents = 10.0;
+    }
+};
+
+class HardangerFiddle : public BowedStringInstrument {
+public:
+    HardangerFiddle() : BowedStringInstrument("Hardanger Fiddle") {
+        recipe.filter_cutoff = 7500.0; recipe.formant1_hz = 1400.0; recipe.detune_cents = 18.0;
+        recipe.stereo_width = 0.3; recipe.formant2_hz = 2600.0; recipe.formant2_gain_db = 3.0;
+    }
+};
+
+class Nyckelharpa : public BowedStringInstrument {
+public:
+    Nyckelharpa() : BowedStringInstrument("Nyckelharpa") {
+        recipe.filter_cutoff = 6800.0; recipe.formant1_hz = 1200.0; recipe.detune_cents = 22.0;
+        recipe.stereo_width = 0.32; recipe.noise_mix = 0.04;
+    }
+};
+
+class Zhonghu : public BowedStringInstrument {
+public:
+    Zhonghu() : BowedStringInstrument("Zhonghu") {
+        recipe.filter_cutoff = 3800.0; recipe.formant1_hz = 750.0; recipe.vibrato_depth_cents = 24.0;
+        recipe.osc_mix = 0.5;
+    }
+};
+
 class BaroqueViolin : public BowedStringInstrument {
 public:
     BaroqueViolin() : BowedStringInstrument("Baroque Violin") {

@@ -89,9 +89,16 @@ inline StereoBuffer render_timbre(const TimbreRecipe& r, const Note& note, int s
 
     double base_freq = (r.fixed_pitch_hz >= 0.0)
         ? r.fixed_pitch_hz
-        : midi_to_freq(note.midi_note) * std::pow(2.0, pitch_shift_semi / 12.0);
+        : midi_to_freq(note.midi_note) * std::pow(2.0, pitch_shift_semi / 12.0)
+                                        * std::pow(2.0, note.pitch_bend_semitones / 12.0);
 
-    const double velocity = dynamics_to_velocity(note.dynamics);
+    const double velocity = dynamics_to_velocity(note.dynamics) * std::max(0.0, std::min(1.0, note.expression));
+
+    const bool has_glide = (note.glide_from_midi >= 0 && r.fixed_pitch_hz < 0.0);
+    const double glide_start_cents = has_glide
+        ? 1200.0 * std::log2(midi_to_freq(note.glide_from_midi) / std::max(1.0, base_freq))
+        : 0.0;
+    const double glide_time = std::max(0.001, note.glide_time);
 
     Oscillator osc1(r.osc1_shape, base_freq, 1.0);
     Oscillator osc2(r.osc2_shape, base_freq * r.osc2_ratio * std::pow(2.0, r.detune_cents / 1200.0), 1.0);
@@ -114,6 +121,10 @@ inline StereoBuffer render_timbre(const TimbreRecipe& r, const Note& note, int s
         double t = static_cast<double>(i) / sample_rate;
 
         double pitch_mult = 1.0;
+        if (has_glide && t < glide_time) {
+            double f = 1.0 - (t / glide_time);
+            pitch_mult *= std::pow(2.0, (glide_start_cents * f) / 1200.0);
+        }
         if (r.pitch_attack_cents != 0.0 && t < r.pitch_attack_time) {
             double f = 1.0 - (t / r.pitch_attack_time);
             pitch_mult *= std::pow(2.0, (r.pitch_attack_cents * f) / 1200.0);
