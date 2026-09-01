@@ -133,5 +133,53 @@ public:
     }
 };
 
+class NaturalHorn : public BrassInstrument {
+public:
+    NaturalHorn() : BrassInstrument("Natural Horn") {
+        recipe.filter_cutoff = 3200.0; recipe.formant1_hz = 580.0; recipe.osc1_shape = WaveShape::BL_Triangle;
+        recipe.noise_mix = 0.03; recipe.pitch_attack_cents = 15.0;
+    }
+};
+
+class Alphorn : public BrassInstrument {
+public:
+    Alphorn() : BrassInstrument("Alphorn") {
+        recipe.filter_cutoff = 1400.0; recipe.formant1_hz = 220.0; recipe.osc_mix = 0.5;
+        recipe.pitch_attack_time = 0.1; recipe.envelope.attack = 0.05; recipe.stereo_width = 0.3;
+    }
+};
+
+class BaroqueTrumpet : public BrassInstrument {
+public:
+    BaroqueTrumpet() : BrassInstrument("Baroque Trumpet") {
+        recipe.filter_cutoff = 6200.0; recipe.formant1_hz = 1500.0; recipe.noise_mix = 0.025;
+        recipe.pitch_attack_cents = 25.0;
+    }
+};
+
+class BaroqueTrombone : public BrassInstrument {
+public:
+    BaroqueTrombone() : BrassInstrument("Baroque Trombone") {
+        recipe.filter_cutoff = 3600.0; recipe.formant1_hz = 620.0; recipe.noise_mix = 0.02;
+        recipe.pitch_attack_time = 0.07;
+    }
+};
+
+class Serpent : public BrassInstrument {
+public:
+    Serpent() : BrassInstrument("Serpent") {
+        recipe.filter_cutoff = 1600.0; recipe.formant1_hz = 260.0; recipe.osc_mix = 0.5;
+        recipe.noise_mix = 0.04; recipe.pitch_attack_time = 0.08;
+    }
+};
+
+class Ophicleide : public BrassInstrument {
+public:
+    Ophicleide() : BrassInstrument("Ophicleide") {
+        recipe.filter_cutoff = 2000.0; recipe.formant1_hz = 320.0; recipe.osc_mix = 0.48;
+        recipe.noise_mix = 0.035; recipe.pitch_attack_cents = 15.0;
+    }
+};
+
 }
 }

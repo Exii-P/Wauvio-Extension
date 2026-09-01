@@ -97,6 +97,7 @@ public:
         recipe.filter_cutoff = 9000.0; recipe.envelope = DAHDSR{0.0, 0.0005, 0.0, 0.04, 0.0, 0.02};
     }
 };
+using HiHat = ClosedHiHat;
 
 class OpenHiHat : public PercussionInstrument {
 public:

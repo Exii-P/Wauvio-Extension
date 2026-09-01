@@ -298,5 +298,37 @@ public:
     }
 };
 
+class ResonatorGuitar : public GuitarInstrument {
+public:
+    ResonatorGuitar() : GuitarInstrument("Resonator Guitar") {
+        recipe.filter_cutoff = 7200.0; recipe.formant1_hz = 2200.0; recipe.formant1_gain_db = 4.0;
+        recipe.noise_attack_burst = 0.26; recipe.envelope.decay = 0.7;
+    }
+};
+
+class Sarod : public GuitarInstrument {
+public:
+    Sarod() : GuitarInstrument("Sarod") {
+        recipe.filter_cutoff = 5600.0; recipe.detune_cents = 14.0; recipe.envelope.decay = 1.5;
+        recipe.noise_attack_burst = 0.16; recipe.gain = 0.85;
+    }
+};
+
+class Santur : public MalletInstrument {
+public:
+    Santur() : MalletInstrument("Santur") {
+        recipe.fm_ratio = 2.2; recipe.fm_index = 1.0; recipe.filter_cutoff = 6000.0;
+        recipe.envelope.decay = 1.0;
+    }
+};
+
+class Kantele : public GuitarInstrument {
+public:
+    Kantele() : GuitarInstrument("Kantele") {
+        recipe.filter_cutoff = 6600.0; recipe.osc1_shape = WaveShape::Triangle;
+        recipe.envelope.decay = 1.2; recipe.noise_attack_burst = 0.1;
+    }
+};
+
 }
 }
