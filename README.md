@@ -157,7 +157,7 @@ The entire point of this layer (and its creation) is that you shouldn't have to 
 
 1. Parses the actual binary file: header/track chunks, variable-length quantities, running status, all of it. No external MIDI library; it's all in here.
 2. Builds a tempo map. If the file changes tempo halfway through, that gets respected instead of averaged away.
-3. Splits things up by track, channel, _and_ whatever GM program is active at the time. This matters more than how it sounds, because some MIDI exports switch GM program mid-track just to signal a change in articulation, and if you only look at channel, you'd miss that.
+3. Splits things up by track, channel, _and_ whatever GM program is active at the time. This matters more than it sounds like it should, because some MIDI exports switch GM program mid-track just to signal a change in articulation, and if you only look at channel, you'd miss that.
 4. Picks an instrument for each part automatically, using a General MIDI program table that covers all 128 programs plus the standard percussion key map. If a track never sends a program change at all (happens), it'll attempt to guess from the track name before giving up and using piano as the default.
 5. Applies velocity, sustain pedal, portamento, pitch bend, and expression/volume, so it's not just "play this note at this fixed volume".
 6. Hands you back something you can render or play.
@@ -174,7 +174,7 @@ music.set_instrument<wauvio::instruments::SoloViolin>(0);
 ```
 Overrides work at the level of the specific program, a specific percussion note, a whole channel, or just swap out a part's instrument after the fact.
 
-Bad input gets an error instead of crashing: missing file, broken header, truncated data, corrupt variable-length values, invalid running status- those things throw a `wauvio::midi::MidiParseError` with a message that tells you exactly what went wrong.
+Bad input gets an error instead of crashing: missing file, broken header, truncated data, corrupt variable-length values, invalid running status; those things throw a `wauvio::midi::MidiParseError` with a message that tells you exactly what went wrong.
 
 ## Some extra notes
 
