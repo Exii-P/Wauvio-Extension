@@ -25,11 +25,11 @@ C++17 (or newer), and that's literally it. I specifically ensured not to include
 
 ## Usage
 
-Drop the files from this repository into your project with
+Clone this repository into its own folder
 ```bash
 git clone https://github.com/artdoesstuff/Wauvio.git
 ```
-and then just include what you need:
+then copy (or move) the files into your project, and then just include what you need:
 ```cpp
 #include "wauvio.hpp"       // needed no matter what
 #include "wauvio_ext.hpp"   // instruments / notes / tracks
