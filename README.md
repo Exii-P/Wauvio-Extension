@@ -20,7 +20,7 @@ wauvio_ext/
 wauvio_midi/
 wauvio_sf2/
 ```
-Yeah, that's it. Examples and demos will be accessible [here](https://github.com/artdoesstuff-ex/Wauvio-Graveyard), but as it stands, only the framework itself will remain here. However, if the examples/demos are too overwhelming at a glance, you can start writing it yourself almost immediately (it's like 3 lines, see below).
+Yeah, that's it. Examples and demos will be accessible [here](https://github.com/artdoesstuff-ex/Wauvio-Graveyard), but as it stands, only the framework itself (and officially supported extensions) will remain here. However, if the examples/demos are too overwhelming at a glance, you can start writing it yourself almost immediately (it's like 3 lines; see below).
 
 ## Requirements
 

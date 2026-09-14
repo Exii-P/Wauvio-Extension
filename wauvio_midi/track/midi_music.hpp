@@ -9,6 +9,11 @@
 #include <vector>
 
 namespace wauvio {
+namespace midi { namespace genre {
+class MidiGenrePreset;
+struct GenreApplyOptions;
+} }
+
 namespace track {
 
 struct ResolvedNote {
@@ -16,6 +21,7 @@ struct ResolvedNote {
     double dur = 0.0;
     int midi_note = 60;
     audio::Dynamics dyn = audio::Dynamics::mf;
+    audio::Articulation articulation = audio::Articulation::Sustain;
     double expression = 1.0;
     double pitch_bend_semitones = 0.0;
     std::vector<std::pair<double,double>> pitch_bend_curve;
@@ -31,6 +37,8 @@ public:
     int bank_msb = 0;
     int bank_lsb = 0;
     bool is_percussion = false;
+    bool program_from_midi_file = false;
+    bool instrument_pinned = false;
 
     midi::InstrumentPtr instrument;
     std::shared_ptr<audio::DrumKit> drum_kit;
@@ -78,6 +86,20 @@ public:
         parts[part_index].is_percussion = true;
     }
 
+    void pin_instrument(size_t part_index) {
+        if (part_index < parts.size()) parts[part_index].instrument_pinned = true;
+    }
+    void unpin_instrument(size_t part_index) {
+        if (part_index < parts.size()) parts[part_index].instrument_pinned = false;
+    }
+
+    void setGenre(std::shared_ptr<const midi::genre::MidiGenrePreset> preset);
+    void setGenre(std::shared_ptr<const midi::genre::MidiGenrePreset> preset,
+                  const midi::genre::GenreApplyOptions& options);
+    void clearGenre();
+    bool has_genre() const noexcept { return genre_preset_ != nullptr; }
+    std::shared_ptr<const midi::genre::MidiGenrePreset> current_genre() const noexcept { return genre_preset_; }
+
     size_t total_samples(int sample_rate) const {
         return static_cast<size_t>((duration_seconds + 2.0) * sample_rate) + 1;
     }
@@ -97,7 +119,7 @@ public:
                 note_audio = std::move(pn.audio);
             } else {
                 if (!p.instrument) continue;
-                audio::Note note(n.midi_note, n.dur, n.dyn);
+                audio::Note note(n.midi_note, n.dur, n.dyn, n.articulation);
                 note.expression = n.expression;
                 note.pitch_bend_semitones = n.pitch_bend_semitones;
                 note.pitch_bend_curve = n.pitch_bend_curve;
@@ -132,6 +154,16 @@ public:
         clamp_buffer(mix);
         return mix;
     }
+
+private:
+    std::shared_ptr<const midi::genre::MidiGenrePreset> genre_preset_;
+    std::vector<MidiPart> pristine_parts_;
+    double pristine_duration_seconds_ = 0.0;
+    bool has_pristine_ = false;
+
+    std::vector<bool> pristine_has_instrument_style_;
+    std::vector<genre::InstrumentStyleBaseline> pristine_instrument_style_;
+    std::vector<std::vector<std::pair<int, genre::InstrumentStyleBaseline>>> pristine_percussion_style_;
 };
 
 }

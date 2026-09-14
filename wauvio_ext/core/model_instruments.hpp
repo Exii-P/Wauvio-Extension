@@ -473,6 +473,18 @@ public:
 
     bool has(int midi_note) const { return mapping_.find(midi_note) != mapping_.end(); }
 
+    std::shared_ptr<Instrument> get(int midi_note) const {
+        auto it = mapping_.find(midi_note);
+        return it != mapping_.end() ? it->second : nullptr;
+    }
+
+    std::vector<int> mapped_notes() const {
+        std::vector<int> out;
+        out.reserve(mapping_.size());
+        for (auto& kv : mapping_) out.push_back(kv.first);
+        return out;
+    }
+
     PlayedNote play(int midi_note, Dynamics dyn = Dynamics::mf, double duration = 0.4,
                      int sample_rate = 0) const
     {
