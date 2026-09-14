@@ -9,14 +9,6 @@
 #include <vector>
 
 namespace wauvio {
-
-// Forward declarations only: the genre system is implemented in
-// wauvio_midi/genre/genre_midi.hpp, which is included after this file (see
-// wauvio_midi.hpp). Keeping wauvio_midi/track ignorant of the genre types'
-// definitions -- only their names -- means this file doesn't need to
-// depend on the genre headers, matching the rest of the library's
-// "nothing lower depends on what's above it" layering. See README.md
-// ("Genre Presets") for the full design.
 namespace midi { namespace genre {
 class MidiGenrePreset;
 struct GenreApplyOptions;
@@ -45,17 +37,7 @@ public:
     int bank_msb = 0;
     int bank_lsb = 0;
     bool is_percussion = false;
-
-    // True if the source MIDI file actually sent a Program Change for this
-    // channel (as opposed to the loader defaulting to/guessing program 0).
-    // Used by genre instrumentation substitution to avoid unexpectedly
-    // replacing an instrument the file explicitly asked for - see
-    // GenreApplyOptions::override_explicit_programs in genre_midi.hpp.
     bool program_from_midi_file = false;
-
-    // When true, genre instrumentation substitution (drum kit / program
-    // swaps) skips this part entirely, regardless of GenreApplyOptions.
-    // Set this on any part you've manually customized and want protected.
     bool instrument_pinned = false;
 
     midi::InstrumentPtr instrument;
@@ -104,10 +86,6 @@ public:
         parts[part_index].is_percussion = true;
     }
 
-    // Protects a part from genre instrumentation substitution (see
-    // MidiPart::instrument_pinned). Purely additive/optional bookkeeping;
-    // has no effect unless a genre with instrumentation is later applied
-    // with instrumentation substitution allowed.
     void pin_instrument(size_t part_index) {
         if (part_index < parts.size()) parts[part_index].instrument_pinned = true;
     }
@@ -115,15 +93,6 @@ public:
         if (part_index < parts.size()) parts[part_index].instrument_pinned = false;
     }
 
-    // ---------------------------------------------------------------
-    //  Genre presets (optional, opt-in - see wauvio_midi/genre/genre_midi.hpp
-    //  for the full implementation and README.md for the design). These
-    //  are declared here, next to the data they operate on, but defined
-    //  out-of-line in the genre header so that wauvio_midi/track does not
-    //  need to depend on wauvio_midi/genre (see the forward declarations
-    //  above). Calling load_midi() and never touching these leaves
-    //  behavior completely unchanged.
-    // ---------------------------------------------------------------
     void setGenre(std::shared_ptr<const midi::genre::MidiGenrePreset> preset);
     void setGenre(std::shared_ptr<const midi::genre::MidiGenrePreset> preset,
                   const midi::genre::GenreApplyOptions& options);
@@ -188,15 +157,13 @@ public:
 
 private:
     std::shared_ptr<const midi::genre::MidiGenrePreset> genre_preset_;
-
-    // Snapshot of parts as they were immediately before the first ever
-    // setGenre() call ("pristine"). Every setGenre()/clearGenre() call
-    // restores from this snapshot before doing anything else, so genres
-    // never compound and switching genres never leaks state from the
-    // previous one. Populated lazily by wauvio_midi_genre_apply_impl().
     std::vector<MidiPart> pristine_parts_;
     double pristine_duration_seconds_ = 0.0;
     bool has_pristine_ = false;
+
+    std::vector<bool> pristine_has_instrument_style_;
+    std::vector<genre::InstrumentStyleBaseline> pristine_instrument_style_;
+    std::vector<std::vector<std::pair<int, genre::InstrumentStyleBaseline>>> pristine_percussion_style_;
 };
 
 }

@@ -8,27 +8,6 @@
 namespace wauvio {
 namespace genre {
 
-// -----------------------------------------------------------------------
-//  apply_to_melody
-//
-//  Mutates `melody` in place according to `preset`'s profile for `role`.
-//  This is meant to be called BEFORE the notes are handed to a Track
-//  (Track only exposes append-only construction, so mutating already-added
-//  entries isn't possible without changing that class - seeexplanation in
-//  README.md for why this call-before-add shape was chosen instead).
-//
-//  Only fields that make sense for a sequential, relative-timed Melody are
-//  applied here: dynamics, articulation, register, and thinning (which
-//  replaces a note with a rest of the same duration rather than removing
-//  it, so the overall length of the Melody is preserved). Swing,
-//  quantization, and per-second timing humanization require absolute
-//  timestamps and are only implemented for MIDI-imported music -- see
-//  wauvio_midi/genre/genre_midi.hpp.
-//
-//  `instrument`, if provided, is used to check supports() before forcing
-//  an articulation, exactly like the MIDI-side transform does.
-//  `seed` makes thinning/humanization deterministic and reproducible.
-// -----------------------------------------------------------------------
 inline void apply_to_melody(audio::Melody& melody, const GenrePreset& preset, Role role,
                              const audio::Instrument* instrument = nullptr, uint64_t seed = 1)
 {
@@ -38,7 +17,6 @@ inline void apply_to_melody(audio::Melody& melody, const GenrePreset& preset, Ro
         audio::Note& n = melody[i];
         if (n.is_rest()) continue;
 
-        // Density: replace (not erase) so the Melody's total duration is unchanged.
         if (prof.thin_probability > 0.0 && n.dynamics < audio::Dynamics::f) {
             double r = detail::unit(detail::note_hash(seed, static_cast<double>(i), n.midi_note, i, 1));
             if (r < prof.thin_probability) {
@@ -55,9 +33,6 @@ inline void apply_to_melody(audio::Melody& melody, const GenrePreset& preset, Ro
 
         double mult = prof.velocity_scale;
         if (!prof.accent_pattern.empty()) {
-            // No absolute bar position is available for a plain Melody, so
-            // the note's position within the Melody itself is used as a
-            // best-effort proxy for "beat index".
             mult *= detail::accent_multiplier(prof.accent_pattern, static_cast<int>(i));
         }
         if (prof.velocity_variance > 0.0) {
@@ -69,18 +44,46 @@ inline void apply_to_melody(audio::Melody& melody, const GenrePreset& preset, Ro
     }
 }
 
-// -----------------------------------------------------------------------
-//  style_instrument
-//
-//  Applies a RoleProfile's synthesis/effects knobs to an Instrument.
-//  Effects are only turned on if not already explicitly enabled (so a
-//  caller's own reverb()/chorus()/etc. calls always win - "preserve
-//  explicit settings" applies here too, not just to MIDI channels).
-//  Synthesis knobs (filter/detune/noise/stereo-width) only apply to
-//  ModeledInstrument-derived instruments (checked via dynamic_cast), since
-//  those are the only ones with an inspectable TimbreRecipe; sample-backed
-//  instruments are left untouched.
-// -----------------------------------------------------------------------
+struct InstrumentStyleBaseline {
+    float gain = 1.0f, pan = 0.0f;
+    bool  reverb_on = false;     Reverb       reverb_fx;
+    bool  chorus_on = false;     Chorus       chorus_fx;
+    bool  delay_on = false;      DelayLine    delay_fx;
+    bool  eq_on = false;         ParametricEQ eq_fx;
+    bool  distortion_on = false; float distortion_drive = 2.0f;
+
+    bool             has_recipe = false;
+    audio::TimbreRecipe recipe;
+};
+
+inline InstrumentStyleBaseline capture_style_baseline(const audio::Instrument& instrument) {
+    InstrumentStyleBaseline b;
+    b.gain = instrument.gain; b.pan = instrument.pan;
+    b.reverb_on = instrument.reverb_on; b.reverb_fx = instrument.reverb_fx;
+    b.chorus_on = instrument.chorus_on; b.chorus_fx = instrument.chorus_fx;
+    b.delay_on = instrument.delay_on; b.delay_fx = instrument.delay_fx;
+    b.eq_on = instrument.eq_on; b.eq_fx = instrument.eq_fx;
+    b.distortion_on = instrument.distortion_on; b.distortion_drive = instrument.distortion_drive;
+    if (auto* modeled = dynamic_cast<const audio::ModeledInstrument*>(&instrument)) {
+        b.has_recipe = true;
+        b.recipe = modeled->recipe;
+    }
+    return b;
+}
+
+inline void restore_style_baseline(audio::Instrument& instrument, const InstrumentStyleBaseline& b) {
+    instrument.gain = b.gain; instrument.pan = b.pan;
+    instrument.reverb_on = b.reverb_on; instrument.reverb_fx = b.reverb_fx;
+    instrument.chorus_on = b.chorus_on; instrument.chorus_fx = b.chorus_fx;
+    instrument.delay_on = b.delay_on; instrument.delay_fx = b.delay_fx;
+    instrument.eq_on = b.eq_on; instrument.eq_fx = b.eq_fx;
+    instrument.distortion_on = b.distortion_on; instrument.distortion_drive = b.distortion_drive;
+    if (b.has_recipe) {
+        if (auto* modeled = dynamic_cast<audio::ModeledInstrument*>(&instrument))
+            modeled->recipe = b.recipe;
+    }
+}
+
 inline void style_instrument(audio::Instrument& instrument, const GenrePreset& preset, Role role) {
     const RoleProfile& prof = preset.profile_for(role);
 
@@ -90,6 +93,14 @@ inline void style_instrument(audio::Instrument& instrument, const GenrePreset& p
         recipe.detune_cents += prof.detune_cents_delta;
         recipe.noise_mix = detail::clampd(recipe.noise_mix + prof.noise_mix_delta, 0.0, 1.0);
         if (prof.stereo_width_override >= 0.0) recipe.stereo_width = prof.stereo_width_override;
+
+        if (prof.wobble_amount > 0.0) {
+            audio::ModRoute route;
+            route.source = audio::ModSource::LFO2;
+            route.target = audio::ModTarget::FilterCutoff;
+            route.amount = prof.wobble_amount * 3500.0;
+            recipe.modulation.push_back(route);
+        }
     }
 
     if (prof.want_reverb && !instrument.reverb_on)
@@ -102,5 +113,5 @@ inline void style_instrument(audio::Instrument& instrument, const GenrePreset& p
         instrument.distortion(prof.distortion_drive);
 }
 
-} // namespace genre
-} // namespace wauvio
+}
+}

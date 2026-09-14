@@ -473,9 +473,6 @@ public:
 
     bool has(int midi_note) const { return mapping_.find(midi_note) != mapping_.end(); }
 
-    // Read-only access to the underlying per-note mapping, for callers
-    // (e.g. the genre preset system) that need to inspect or style
-    // individual mapped voices rather than just play them.
     std::shared_ptr<Instrument> get(int midi_note) const {
         auto it = mapping_.find(midi_note);
         return it != mapping_.end() ? it->second : nullptr;

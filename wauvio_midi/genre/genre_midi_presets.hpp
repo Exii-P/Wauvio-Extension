@@ -1,22 +1,5 @@
 #pragma once
 
-// =============================================================================
-//  Built-in genre presets - MIDI instrumentation layer.
-//
-//  Each factory here wraps the matching wauvio_ext preset (genre_presets.hpp)
-//  with the MIDI-only, opt-in instrumentation choices: which drum kit a
-//  genre suggests for percussion parts, and which GM programs it suggests
-//  substituting on melodic parts. None of this ever applies unless the
-//  caller passes GenreApplyOptions::allow_instrumentation = true - see
-//  genre_midi.hpp and README.md.
-//
-//  Instrumentation choices here are intentionally conservative: they lean
-//  on instruments/kits that already exist in wauvio_ext (kits.hpp,
-//  synths.hpp) rather than inventing new classes, and they generally only
-//  touch generic/synth GM program ranges (leads/pads/basses, 80-103) or
-//  percussion, not e.g. "replace every piano with a guitar".
-// =============================================================================
-
 #include "genre_midi.hpp"
 #include "../../wauvio_ext/genre/genre_presets.hpp"
 #include "../../wauvio_ext/instruments/percussion/kits.hpp"
@@ -43,10 +26,6 @@ inline MidiGenrePresetPtr jazz() {
 inline MidiGenrePresetPtr rock() {
     auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::rock());
     p->percussion_kit = [] { return std::make_shared<instruments::RockKit>(); };
-    // GM 29/30 (overdriven/distorted electric guitar) already fit; nudge
-    // the plain "clean" guitar programs and synth leads toward something
-    // driven, since a genre preset shouldn't silently leave a clean guitar
-    // clean and call it Rock.
     p->melodic_program_overrides[26] = [] { return std::make_shared<instruments::OverdrivenElectricGuitar>(); };
     p->melodic_program_overrides[27] = [] { return std::make_shared<instruments::OverdrivenElectricGuitar>(); };
     p->melodic_program_overrides[81] = [] { return std::make_shared<instruments::SynthLead>(); };
@@ -94,11 +73,9 @@ inline MidiGenrePresetPtr drum_and_bass() {
 inline MidiGenrePresetPtr chiptune() {
     auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::chiptune());
     p->percussion_kit = [] { return std::make_shared<instruments::LoFiKit>(); };
-    // Lean heavily on the library's own square/pulse "chip" instruments
-    // for the most common melodic/bass program ranges.
-    for (int prog : {0, 1, 2, 40, 41, 56, 65, 73, 80, 81, 84, 86}) // pianos, strings, sax/flute, leads
+    for (int prog : {0, 1, 2, 40, 41, 56, 65, 73, 80, 81, 84, 86})
         p->melodic_program_overrides[prog] = [] { return std::make_shared<instruments::ChiptuneLead>(); };
-    for (int prog : {32, 33, 34, 35, 36, 37, 38, 39}) // full GM bass family
+    for (int prog : {32, 33, 34, 35, 36, 37, 38, 39})
         p->melodic_program_overrides[prog] = [] { return std::make_shared<instruments::ChiptuneBass>(); };
     return p;
 }
@@ -119,7 +96,96 @@ inline MidiGenrePresetPtr touhou() {
     return p;
 }
 
-} // namespace presets
-} // namespace genre
-} // namespace midi
-} // namespace wauvio
+inline std::shared_ptr<audio::DrumKit> bossa_nova_kit() {
+    auto kit = std::make_shared<audio::DrumKit>("Bossa Nova Kit");
+    kit->map(36, std::make_shared<instruments::Surdo>());
+    kit->map(38, std::make_shared<instruments::Claves>());
+    kit->map(40, std::make_shared<instruments::Rimshot>());
+    kit->map(42, std::make_shared<instruments::ClosedHiHat>());
+    kit->map(46, std::make_shared<instruments::OpenHiHat>());
+    kit->map(56, std::make_shared<instruments::Cowbell>());
+    kit->map(60, std::make_shared<instruments::Bongo>());
+    kit->map(61, std::make_shared<instruments::Bongo>());
+    kit->map(62, std::make_shared<instruments::Conga>());
+    kit->map(63, std::make_shared<instruments::Conga>());
+    kit->map(64, std::make_shared<instruments::Conga>());
+    kit->map(65, std::make_shared<instruments::Timbales>());
+    kit->map(66, std::make_shared<instruments::Timbales>());
+    kit->map(69, std::make_shared<instruments::Cabasa>());
+    kit->map(70, std::make_shared<instruments::Maracas>());
+    kit->map(73, std::make_shared<instruments::Guiro>());
+    kit->map(74, std::make_shared<instruments::Guiro>());
+    return kit;
+}
+
+inline MidiGenrePresetPtr funk() {
+    auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::funk());
+    p->percussion_kit = [] { return std::make_shared<instruments::StudioKit>(); };
+    return p;
+}
+
+inline MidiGenrePresetPtr blues() {
+    auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::blues());
+    p->percussion_kit = [] { return std::make_shared<instruments::StudioKit>(); };
+    p->melodic_program_overrides[26] = [] { return std::make_shared<instruments::OverdrivenElectricGuitar>(); };
+    p->melodic_program_overrides[27] = [] { return std::make_shared<instruments::OverdrivenElectricGuitar>(); };
+    return p;
+}
+
+inline MidiGenrePresetPtr reggae() {
+    auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::reggae());
+    p->percussion_kit = [] { return std::make_shared<instruments::JazzKit>(); }; // tight, dry kit
+    p->melodic_program_overrides[27] = [] { return std::make_shared<instruments::CleanElectricGuitar>(); };
+    return p;
+}
+
+inline MidiGenrePresetPtr trance() {
+    auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::trance());
+    p->percussion_kit = [] { return std::make_shared<instruments::Kit909>(); };
+    p->melodic_program_overrides[38] = [] { return std::make_shared<instruments::SynthBass>(); };
+    p->melodic_program_overrides[39] = [] { return std::make_shared<instruments::SynthBass>(); };
+    p->melodic_program_overrides[80] = [] { return std::make_shared<instruments::SynthLead>(); };
+    p->melodic_program_overrides[89] = [] { return std::make_shared<instruments::AtmosphericSynth>(); };
+    return p;
+}
+
+inline MidiGenrePresetPtr dubstep() {
+    auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::dubstep());
+    p->percussion_kit = [] { return std::make_shared<instruments::ElectronicKit>(); };
+    p->melodic_program_overrides[33] = [] { return std::make_shared<instruments::SynthBass>(); };
+    p->melodic_program_overrides[38] = [] { return std::make_shared<instruments::SynthBass>(); };
+    p->melodic_program_overrides[39] = [] { return std::make_shared<instruments::SynthBass>(); };
+    return p;
+}
+
+inline MidiGenrePresetPtr bossa_nova() {
+    auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::bossa_nova());
+    p->percussion_kit = [] { return bossa_nova_kit(); };
+    p->melodic_program_overrides[24] = [] { return std::make_shared<instruments::NylonGuitar>(); };
+    p->melodic_program_overrides[25] = [] { return std::make_shared<instruments::NylonGuitar>(); };
+    p->melodic_program_overrides[26] = [] { return std::make_shared<instruments::NylonGuitar>(); };
+    p->melodic_program_overrides[27] = [] { return std::make_shared<instruments::NylonGuitar>(); };
+    return p;
+}
+
+inline MidiGenrePresetPtr hardcore() {
+    auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::hardcore());
+    p->percussion_kit = [] { return std::make_shared<instruments::Kit909>(); };
+    p->melodic_program_overrides[38] = [] { return std::make_shared<instruments::SynthBass>(); };
+    p->melodic_program_overrides[39] = [] { return std::make_shared<instruments::SynthBass>(); };
+    p->melodic_program_overrides[80] = [] { return std::make_shared<instruments::SynthLead>(); };
+    return p;
+}
+
+inline MidiGenrePresetPtr speedcore() {
+    auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::speedcore());
+    p->percussion_kit = [] { return std::make_shared<instruments::Kit808>(); };
+    p->melodic_program_overrides[38] = [] { return std::make_shared<instruments::SynthBass>(); };
+    p->melodic_program_overrides[39] = [] { return std::make_shared<instruments::SynthBass>(); };
+    return p;
+}
+
+}
+}
+}
+}
