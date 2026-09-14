@@ -271,6 +271,7 @@ inline MidiMusic load_midi(const std::string& path, const LoadOptions& opts = Lo
             part.bank_lsb = bank_lsb;
             part.name = !raw_track.name.empty() ? raw_track.name
                                                  : ("Track" + std::to_string(ti) + "_Ch" + std::to_string(channel));
+            part.program_from_midi_file = channel_saw_program_change[static_cast<size_t>(channel)];
 
             if (midi::InstrumentResolver::is_percussion_channel(channel)) {
                 part.is_percussion = true;

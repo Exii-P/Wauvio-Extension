@@ -12,6 +12,8 @@
 #include "wauvio_midi/resolution/instrument_resolver.hpp"
 
 #include "wauvio_midi/track/midi_music.hpp"
+#include "wauvio_midi/genre/genre_midi.hpp"
+#include "wauvio_midi/genre/genre_midi_presets.hpp"
 #include "wauvio_midi/track/loader.hpp"
 #include "wauvio_midi/track/render.hpp"
 #include "wauvio_midi/track/midi_writer.hpp"

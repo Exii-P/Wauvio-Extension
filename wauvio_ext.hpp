@@ -21,3 +21,7 @@
 #include "wauvio_ext/instruments/vocals/vocals.hpp"
 #include "wauvio_ext/instruments/experimental/experimental.hpp"
 #include "wauvio_ext/instruments/synthesized/synths.hpp"
+
+#include "wauvio_ext/genre/genre_types.hpp"
+#include "wauvio_ext/genre/genre_apply.hpp"
+#include "wauvio_ext/genre/genre_presets.hpp"
