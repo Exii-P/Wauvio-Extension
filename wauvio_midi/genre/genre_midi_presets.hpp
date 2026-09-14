@@ -134,7 +134,7 @@ inline MidiGenrePresetPtr blues() {
 
 inline MidiGenrePresetPtr reggae() {
     auto p = std::make_shared<MidiGenrePreset>(wauvio::genre::presets::reggae());
-    p->percussion_kit = [] { return std::make_shared<instruments::JazzKit>(); }; // tight, dry kit
+    p->percussion_kit = [] { return std::make_shared<instruments::JazzKit>(); };
     p->melodic_program_overrides[27] = [] { return std::make_shared<instruments::CleanElectricGuitar>(); };
     return p;
 }
