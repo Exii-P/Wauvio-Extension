@@ -27,6 +27,7 @@ namespace wauvio::vocal::languages {
     { Phoneme p; p.symbol = "i"; p.type = T::Vowel; p.features = {Place::None, Manner::Vowel, true};
       p.formantFreq = {280.f, 2300.f, 3000.f, 3400.f, 4950.f}; p.formantBW = {60.f, 90.f, 120.f, 200.f, 200.f};
       p.minDurationMs = 110.f; inventory_.add(std::move(p)); }
+
     { Phoneme p; p.symbol = "u"; p.type = T::Vowel; p.features = {Place::None, Manner::Vowel, true};
       p.formantFreq = {300.f, 1300.f, 2200.f, 3400.f, 4950.f}; p.formantBW = {60.f, 90.f, 120.f, 200.f, 200.f};
       p.minDurationMs = 110.f; inventory_.add(std::move(p)); }
@@ -68,6 +69,7 @@ namespace wauvio::vocal::languages {
     { Phoneme p; p.symbol = "n"; p.type = T::Nasal; p.features = {Place::Alveolar, Manner::Nasal, true};
       p.formantFreq = {280.f, 1600.f, 2600.f, 3400.f, 4950.f}; p.formantBW = {100.f, 150.f, 200.f, 250.f, 250.f};
       p.f2LocusSlope = 0.35f; p.f2LocusIntercept = 1700.f; p.minDurationMs = 80.f; inventory_.add(std::move(p)); }
+
     { Phoneme p; p.symbol = "N"; p.type = T::Nasal; p.features = {Place::Alveolar, Manner::Nasal, true};
       p.formantFreq = {280.f, 1600.f, 2600.f, 3400.f, 4950.f}; p.formantBW = {100.f, 150.f, 200.f, 250.f, 250.f};
       p.minDurationMs = 100.f; inventory_.add(std::move(p)); }

@@ -34,6 +34,8 @@
 
 #include "wauvio_vocal/language/languages/japanese/japanese_inventory.hpp"
 #include "wauvio_vocal/language/languages/japanese/japanese_phonemic_tokenizer.hpp"
+#include "wauvio_vocal/language/languages/japanese/pitch_accent.hpp"
 
 #include "wauvio_vocal/utility/damped_follower.hpp"
 #include "wauvio_vocal/articulation/articulation.hpp"
+#include "wauvio_vocal/pitch/pitch.hpp"
